@@ -30,21 +30,32 @@ USER_SKILLS = [
 def job_pipeline():
     logger.info("Starting internship fetching pipeline...")
 
-    # 1. Fetch from source
-    jobs = fetch_internships(query="python developer", location="Remote")
-    if jobs is None:
-        logger.error("Failed to fetch jobs from all sources.")
-        notify_failure()
-        return
+    # 1. Fetch from source dynamically based on user skills
+    jobs = []
+    
+    # Fetch based on the top 2 user skills to get accurate results
+    top_skills_to_search = USER_SKILLS[:2] if len(USER_SKILLS) > 0 else ["software"]
+    
+    for skill in top_skills_to_search:
+        query_str = f"{skill} intern"
+        logger.info(f"Fetching internships for query: '{query_str}'")
+        fetched = fetch_internships(query=query_str, location="Remote")
+        if fetched:
+            jobs.extend(fetched)
 
     if not jobs:
         logger.warning("No jobs fetched today. Trying broader search...")
-        jobs = fetch_internships(query="remote", location="")
+        jobs = fetch_internships(query="remote intern", location="")
         if not jobs:
-            logger.warning("Still no jobs. Skipping this cycle.")
+            logger.error("Still no jobs. Skipping this cycle and notifying failure.")
+            notify_failure()
             return
+            
+    # Deduplicate fetched jobs by link before filtering
+    unique_jobs = {job['link']: job for job in jobs}.values()
+    jobs = list(unique_jobs)
 
-    logger.info(f"Fetched {len(jobs)} jobs. Filtering and ranking...")
+    logger.info(f"Fetched {len(jobs)} unique jobs. Filtering and ranking...")
 
     # 2. Filter & Rank
     ranked_jobs = rank_and_filter(jobs, USER_SKILLS)
