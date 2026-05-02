@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# Project specific
+DailyInternshipBot/.env
+DailyInternshipBot/bot_activity.log
+DailyInternshipBot/internships.db
+bot_activity.log
+internships.db
+
+# OS
+.DS_Store
+Thumbs.db
